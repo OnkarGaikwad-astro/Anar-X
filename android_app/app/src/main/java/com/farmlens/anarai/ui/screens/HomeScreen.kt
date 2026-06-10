@@ -60,7 +60,7 @@ fun HomeScreen(onImageSelected: (Uri) -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("FarmLens Anar AI", fontWeight = FontWeight.Bold) },
+                title = { Text("Anar X", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF0C617B),
                     titleContentColor = Color.White

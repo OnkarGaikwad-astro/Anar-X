@@ -10,7 +10,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class OnDeviceLLMService(private val context: Context) {
-    private var llmInference: LlmInference? = null
+    companion object {
+        private var llmInference: LlmInference? = null
+    }
     private val modelName = "gemma.bin"
     
     val isModelAvailable: Boolean
@@ -35,11 +37,17 @@ class OnDeviceLLMService(private val context: Context) {
         }
     }
 
-    fun generateResponse(prompt: String): Flow<String> = flow {
+    fun generateResponse(prompt: String, isChat: Boolean = false): Flow<String> = flow {
         val inference = llmInference ?: throw Exception("LLM not initialized")
         
+        val finalPrompt = if (isChat) {
+            "Answer briefly and ONLY about pomegranate farming. Query: $prompt"
+        } else {
+            prompt
+        }
+        
         // Gemma requires specific prompt formatting
-        val formattedPrompt = "<start_of_turn>user\n$prompt<end_of_turn>\n<start_of_turn>model\n"
+        val formattedPrompt = "<start_of_turn>user\n$finalPrompt<end_of_turn>\n<start_of_turn>model\n"
         
         try {
             val response = inference.generateResponse(formattedPrompt)
@@ -52,7 +60,7 @@ class OnDeviceLLMService(private val context: Context) {
     }.flowOn(Dispatchers.IO)
 
     fun close() {
-        llmInference?.close()
-        llmInference = null
+        // Keep the model loaded so other screens can use it, or implement reference counting.
+        // For this single-activity app, we can let the OS clean it up.
     }
 }

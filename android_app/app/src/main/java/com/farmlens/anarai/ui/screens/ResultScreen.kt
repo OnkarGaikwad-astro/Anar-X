@@ -30,8 +30,8 @@ import com.farmlens.anarai.data.AppDatabase
 import com.farmlens.anarai.data.ScanHistoryEntity
 import com.farmlens.anarai.ml.MLService
 import com.farmlens.anarai.ml.PredictionResult
-import com.farmlens.anarai.api.OllamaClient
-import com.farmlens.anarai.api.OllamaRequest
+import com.farmlens.anarai.ml.OnDeviceLLMService
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -43,6 +43,7 @@ fun ResultScreen(imageUri: Uri, isHistory: Boolean = false, mlService: MLService
     var llmRecommendation by remember { mutableStateOf<String>("Loading AI recommendation...") }
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    val onDeviceLLM = remember { OnDeviceLLMService(context) }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -105,12 +106,15 @@ fun ResultScreen(imageUri: Uri, isHistory: Boolean = false, mlService: MLService
                                     "The disease detected is ${res.disease} with a severity of ${getMarathiSeverity(res.severity)}. " +
                                     "Provide a very brief, practical treatment recommendation in bullet points."
                             
-                            // We are specifically requesting Llama 3.2 (which comes in 1B/3B variants)
-                            val request = OllamaRequest(model = "llama3.2", prompt = prompt)
-                            val response = OllamaClient.api.generateRecommendation(request)
-                            llmRecommendation = response.response
+                            // Use on-device LLM (Gemma) instead of Ollama
+                            onDeviceLLM.initialize() // Will fast-return if already initialized
+                            var accumulatedResponse = ""
+                            onDeviceLLM.generateResponse(prompt, isChat = false).collectLatest { responseChunk ->
+                                accumulatedResponse = responseChunk
+                                llmRecommendation = accumulatedResponse
+                            }
                         } catch (e: Exception) {
-                            llmRecommendation = "Failed to connect to Local Llama 3B server: ${e.message}\n\nFallback: " + getRecommendation(res.disease)
+                            llmRecommendation = "Failed to run on-device LLM: ${e.message}\n\nFallback: " + getRecommendation(res.disease)
                         }
                     }
                 }
