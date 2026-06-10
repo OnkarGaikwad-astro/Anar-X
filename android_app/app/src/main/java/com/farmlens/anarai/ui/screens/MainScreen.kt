@@ -2,6 +2,8 @@ package com.farmlens.anarai.ui.screens
 
 import android.net.Uri
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
@@ -53,7 +55,8 @@ fun MainScreen(mlService: MLService, globalNavController: NavController) {
             val currentRoute = navBackStackEntry?.destination?.route
 
             NavigationBar(
-                containerColor = Color.White
+                containerColor = Color.White,
+                modifier = Modifier.height(72.dp)
             ) {
                 items.forEach { item ->
                     NavigationBarItem(

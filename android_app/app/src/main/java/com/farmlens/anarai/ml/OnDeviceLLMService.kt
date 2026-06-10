@@ -40,14 +40,8 @@ class OnDeviceLLMService(private val context: Context) {
     fun generateResponse(prompt: String, isChat: Boolean = false): Flow<String> = flow {
         val inference = llmInference ?: throw Exception("LLM not initialized")
         
-        val finalPrompt = if (isChat) {
-            "Answer briefly and ONLY about pomegranate farming. Query: $prompt"
-        } else {
-            prompt
-        }
-        
         // Gemma requires specific prompt formatting
-        val formattedPrompt = "<start_of_turn>user\n$finalPrompt<end_of_turn>\n<start_of_turn>model\n"
+        val formattedPrompt = "<start_of_turn>user\n$prompt<end_of_turn>\n<start_of_turn>model\n"
         
         try {
             val response = inference.generateResponse(formattedPrompt)

@@ -104,6 +104,15 @@ class AskAurexViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun clearChat() {
+        viewModelScope.launch {
+            chatDao.deleteAllChats()
+            val greeting = "Hello! I am Aurex, your completely offline agricultural AI. How can I help you today?"
+            chatDao.insertChat(ChatMessageEntity(text = greeting, isUser = false))
+            _messages.value = listOf(ChatMessage(greeting, isUser = false))
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         llmService.close()

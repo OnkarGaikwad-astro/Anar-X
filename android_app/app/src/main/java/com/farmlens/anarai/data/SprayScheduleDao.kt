@@ -13,7 +13,7 @@ interface SprayScheduleDao {
     fun getAllSchedules(): Flow<List<SprayScheduleEntity>>
 
     @Insert
-    suspend fun insert(schedule: SprayScheduleEntity)
+    suspend fun insert(schedule: SprayScheduleEntity): Long
 
     @Update
     suspend fun update(schedule: SprayScheduleEntity)

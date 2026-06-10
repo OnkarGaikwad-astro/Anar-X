@@ -1,5 +1,14 @@
 package com.farmlens.anarai.ui.screens
 
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.Manifest
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.farmlens.anarai.data.AppDatabase
 import com.farmlens.anarai.data.SprayScheduleEntity
+import com.farmlens.anarai.data.AlarmReceiver
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -31,6 +41,20 @@ fun CalendarScreen() {
     val scheduleList by db.sprayScheduleDao().getAllSchedules().collectAsState(initial = emptyList())
     val coroutineScope = rememberCoroutineScope()
     var showDialog by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            Toast.makeText(context, "Notifications disabled. Alarms won't show popups.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -90,13 +114,14 @@ fun CalendarScreen() {
                 onDismiss = { showDialog = false },
                 onSave = { chemical, notes, dateMillis ->
                     coroutineScope.launch {
-                        db.sprayScheduleDao().insert(
+                        val newId = db.sprayScheduleDao().insert(
                             SprayScheduleEntity(
                                 dateMillis = dateMillis,
                                 chemicalName = chemical,
                                 notes = notes
                             )
                         )
+                        scheduleAlarm(context, newId.toInt(), chemical, notes, dateMillis)
                     }
                     showDialog = false
                 }
@@ -175,11 +200,13 @@ fun ScheduleCard(schedule: SprayScheduleEntity, onToggleComplete: () -> Unit) {
                             dateMillis = dateMillis
                         )
                     )
+                    scheduleAlarm(context, schedule.id.toInt(), chemical, notes, dateMillis)
                 }
                 showEditDialog = false
             },
             onDelete = {
                 coroutineScope.launch {
+                    cancelAlarm(context, schedule.id.toInt())
                     db.sprayScheduleDao().delete(schedule)
                 }
                 showEditDialog = false
