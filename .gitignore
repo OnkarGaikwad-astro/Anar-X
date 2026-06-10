@@ -1,0 +1,37 @@
+# Dataset
+Pomegranate Diseases Dataset/
+ml_pipeline/dataset/
+
+# Saved Models
+ml_pipeline/saved_models/
+ml_pipeline/tflite_model/
+*.keras
+
+# Python
+__pycache__/
+*.pyc
+
+# IDEs
+.idea/
+.vscode/
+
+# Zip files
+*.zip
+
+# Android & Gradle
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+bin/
+gen/
+out/
+build/
+app/build/
+.gradle/
+local.properties
+.cxx/
+captures/
+crash.txt
+log.txt
