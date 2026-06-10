@@ -66,7 +66,11 @@ class MainActivity : ComponentActivity() {
                                     type = androidx.navigation.NavType.BoolType
                                     defaultValue = false
                                 }
-                            )
+                            ),
+                            enterTransition = { androidx.compose.animation.EnterTransition.None },
+                            exitTransition = { androidx.compose.animation.ExitTransition.None },
+                            popEnterTransition = { androidx.compose.animation.EnterTransition.None },
+                            popExitTransition = { androidx.compose.animation.ExitTransition.None }
                         ) { backStackEntry ->
                             val uriString = backStackEntry.arguments?.getString("imageUri")
                             val fromHistory = backStackEntry.arguments?.getBoolean("fromHistory") ?: false

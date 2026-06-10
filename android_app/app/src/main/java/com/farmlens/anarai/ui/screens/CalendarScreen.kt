@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -59,7 +60,7 @@ fun CalendarScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Treatment Calendar", fontWeight = FontWeight.Bold) },
+                title = { Text("Spray Schedule", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White
@@ -112,16 +113,17 @@ fun CalendarScreen() {
             AddEditScheduleDialog(
                 schedule = null, // null means add new
                 onDismiss = { showDialog = false },
-                onSave = { chemical, notes, dateMillis ->
+                onSave = { chemical, notes, dateMillis, reminderOffsetMillis ->
                     coroutineScope.launch {
                         val newId = db.sprayScheduleDao().insert(
                             SprayScheduleEntity(
                                 dateMillis = dateMillis,
                                 chemicalName = chemical,
-                                notes = notes
+                                notes = notes,
+                                reminderOffsetMillis = reminderOffsetMillis
                             )
                         )
-                        scheduleAlarm(context, newId.toInt(), chemical, notes, dateMillis)
+                        scheduleAlarm(context, newId.toInt(), chemical, notes, dateMillis, reminderOffsetMillis)
                     }
                     showDialog = false
                 }
@@ -178,7 +180,7 @@ fun ScheduleCard(schedule: SprayScheduleEntity, onToggleComplete: () -> Unit) {
                     fontSize = 12.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(top = 4.dp),
-                    fontWeight = if (schedule.isCompleted) FontWeight.Bold else FontWeight.Normal
+                    fontWeight = if (schedule.isCompleted) FontWeight.Black else FontWeight.ExtraBold
                 )
             }
             TextButton(onClick = { showEditDialog = true }) {
@@ -191,16 +193,17 @@ fun ScheduleCard(schedule: SprayScheduleEntity, onToggleComplete: () -> Unit) {
         AddEditScheduleDialog(
             schedule = schedule,
             onDismiss = { showEditDialog = false },
-            onSave = { chemical, notes, dateMillis ->
+            onSave = { chemical, notes, dateMillis, reminderOffsetMillis ->
                 coroutineScope.launch {
                     db.sprayScheduleDao().update(
                         schedule.copy(
                             chemicalName = chemical,
                             notes = notes,
-                            dateMillis = dateMillis
+                            dateMillis = dateMillis,
+                            reminderOffsetMillis = reminderOffsetMillis
                         )
                     )
-                    scheduleAlarm(context, schedule.id.toInt(), chemical, notes, dateMillis)
+                    scheduleAlarm(context, schedule.id.toInt(), chemical, notes, dateMillis, reminderOffsetMillis)
                 }
                 showEditDialog = false
             },
@@ -220,12 +223,20 @@ fun ScheduleCard(schedule: SprayScheduleEntity, onToggleComplete: () -> Unit) {
 fun AddEditScheduleDialog(
     schedule: SprayScheduleEntity?,
     onDismiss: () -> Unit,
-    onSave: (String, String, Long) -> Unit,
+    onSave: (String, String, Long, Long) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
     var chemical by remember { mutableStateOf(schedule?.chemicalName ?: "") }
     var notes by remember { mutableStateOf(schedule?.notes ?: "") }
     var dateMillis by remember { mutableStateOf(schedule?.dateMillis ?: (System.currentTimeMillis() + 86400000)) }
+    var reminderOffsetMillis by remember { mutableStateOf(schedule?.reminderOffsetMillis ?: 0L) }
+    var expanded by remember { mutableStateOf(false) }
+    
+    val reminderOptions = mapOf(
+        0L to "At time of spraying",
+        30 * 60 * 1000L to "30 mins before",
+        60 * 60 * 1000L to "1 hour before"
+    )
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance().apply { timeInMillis = dateMillis }
@@ -280,12 +291,41 @@ fun AddEditScheduleDialog(
                 ) {
                     Text(dateFormat.format(Date(dateMillis)))
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        readOnly = true,
+                        value = reminderOptions[reminderOffsetMillis] ?: "At time of spraying",
+                        onValueChange = { },
+                        label = { Text("Reminder") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        reminderOptions.forEach { (offset, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    reminderOffsetMillis = offset
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    if (chemical.isNotBlank()) onSave(chemical, notes, dateMillis)
+                    if (chemical.isNotBlank()) onSave(chemical, notes, dateMillis, reminderOffsetMillis)
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {

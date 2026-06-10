@@ -8,9 +8,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import android.Manifest
+import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -47,23 +51,44 @@ fun HomeScreen(onImageSelected: (Uri) -> Unit) {
     }
 
     fun launchCamera() {
-        val tempFile = File.createTempFile("capture_", ".jpg", context.cacheDir)
-        val uri = FileProvider.getUriForFile(
-            context,
-            "com.farmlens.anarai.fileprovider",
-            tempFile
-        )
-        tempImageUri = uri
-        cameraLauncher.launch(uri)
+        try {
+            val tempFile = File.createTempFile("capture_", ".jpg", context.cacheDir)
+            val uri = FileProvider.getUriForFile(
+                context,
+                "com.farmlens.anarai.fileprovider",
+                tempFile
+            )
+            tempImageUri = uri
+            cameraLauncher.launch(uri)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Error setting up camera", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            launchCamera()
+        } else {
+            Toast.makeText(context, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show()
+        }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Anar X", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { (context as? android.app.Activity)?.finish() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0C617B),
-                    titleContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
         }
@@ -100,7 +125,7 @@ fun HomeScreen(onImageSelected: (Uri) -> Unit) {
                 subtitle = "Capture new",
                 icon = Icons.Default.CameraAlt,
                 backgroundColor = MaterialTheme.colorScheme.secondary,
-                onClick = { launchCamera() }
+                onClick = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
             )
 
             Spacer(modifier = Modifier.height(20.dp))

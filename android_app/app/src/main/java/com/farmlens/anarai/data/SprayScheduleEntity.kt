@@ -9,5 +9,6 @@ data class SprayScheduleEntity(
     val dateMillis: Long,
     val chemicalName: String,
     val isCompleted: Boolean = false,
-    val notes: String = ""
+    val notes: String = "",
+    val reminderOffsetMillis: Long = 0L
 )

@@ -94,17 +94,21 @@ fun MainScreen(mlService: MLService, globalNavController: NavController) {
             popExitTransition = { ExitTransition.None }
         ) {
             composable(BottomNavItem.Home.route) {
-                HomeScreen(onImageSelected = { uri ->
-                    globalNavController.navigate("result/${Uri.encode(uri.toString())}")
-                })
+                HomeScreen(
+                    onImageSelected = { uri ->
+                        globalNavController.navigate("result/${Uri.encode(uri.toString())}")
+                    }
+                )
             }
             composable(BottomNavItem.Calendar.route) {
                 CalendarScreen()
             }
             composable(BottomNavItem.History.route) {
-                HistoryScreen(onItemClick = { uri ->
-                    globalNavController.navigate("result/${Uri.encode(uri)}?fromHistory=true")
-                })
+                HistoryScreen(
+                    onItemClick = { uri ->
+                        globalNavController.navigate("result/${Uri.encode(uri)}?fromHistory=true")
+                    }
+                )
             }
             composable(BottomNavItem.AskAurex.route) {
                 AskAurexScreen(viewModel = askAurexViewModel)

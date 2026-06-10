@@ -8,13 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.farmlens.anarai.R
 
 val JosefinSans = FontFamily(
-    Font(R.font.josefinsans, FontWeight.Normal),
-    Font(R.font.josefinsans, FontWeight.Bold),
-    Font(R.font.josefinsans, FontWeight.ExtraBold),
-    Font(R.font.josefinsans, FontWeight.Light),
-    Font(R.font.josefinsans, FontWeight.Medium),
-    Font(R.font.josefinsans, FontWeight.SemiBold),
-    Font(R.font.josefinsans, FontWeight.Thin)
+    Font(R.font.josefinsans)
 )
 
 val Typography = Typography().let { defaultTypography ->
@@ -26,13 +20,13 @@ val Typography = Typography().let { defaultTypography ->
         headlineMedium = defaultTypography.headlineMedium.copy(fontFamily = JosefinSans, fontWeight = FontWeight.Black),
         headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = JosefinSans, fontWeight = FontWeight.Black),
         titleLarge = defaultTypography.titleLarge.copy(fontFamily = JosefinSans, fontWeight = FontWeight.Black),
-        titleMedium = defaultTypography.titleMedium.copy(fontFamily = JosefinSans, fontWeight = FontWeight.ExtraBold),
-        titleSmall = defaultTypography.titleSmall.copy(fontFamily = JosefinSans, fontWeight = FontWeight.ExtraBold),
-        bodyLarge = defaultTypography.bodyLarge.copy(fontFamily = JosefinSans, fontWeight = FontWeight.ExtraBold),
-        bodyMedium = defaultTypography.bodyMedium.copy(fontFamily = JosefinSans, fontWeight = FontWeight.ExtraBold),
-        bodySmall = defaultTypography.bodySmall.copy(fontFamily = JosefinSans, fontWeight = FontWeight.ExtraBold),
-        labelLarge = defaultTypography.labelLarge.copy(fontFamily = JosefinSans, fontWeight = FontWeight.ExtraBold),
-        labelMedium = defaultTypography.labelMedium.copy(fontFamily = JosefinSans, fontWeight = FontWeight.ExtraBold),
-        labelSmall = defaultTypography.labelSmall.copy(fontFamily = JosefinSans, fontWeight = FontWeight.ExtraBold)
+        titleMedium = defaultTypography.titleMedium.copy(fontFamily = JosefinSans, fontWeight = FontWeight.Black),
+        titleSmall = defaultTypography.titleSmall.copy(fontFamily = JosefinSans, fontWeight = FontWeight.Black),
+        bodyLarge = defaultTypography.bodyLarge.copy(fontFamily = JosefinSans, fontWeight = FontWeight.SemiBold),
+        bodyMedium = defaultTypography.bodyMedium.copy(fontFamily = JosefinSans, fontWeight = FontWeight.SemiBold),
+        bodySmall = defaultTypography.bodySmall.copy(fontFamily = JosefinSans, fontWeight = FontWeight.SemiBold),
+        labelLarge = defaultTypography.labelLarge.copy(fontFamily = JosefinSans, fontWeight = FontWeight.SemiBold),
+        labelMedium = defaultTypography.labelMedium.copy(fontFamily = JosefinSans, fontWeight = FontWeight.SemiBold),
+        labelSmall = defaultTypography.labelSmall.copy(fontFamily = JosefinSans, fontWeight = FontWeight.SemiBold)
     )
 }

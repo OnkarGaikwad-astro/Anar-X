@@ -12,10 +12,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -175,6 +177,7 @@ fun HistoryCard(
                 contentDescription = "Scanned Image",
                 modifier = Modifier
                     .size(80.dp)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
                     .background(Color.LightGray),
                 contentScale = ContentScale.Crop
             )

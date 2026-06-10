@@ -16,27 +16,31 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Intent to open the app when the notification is tapped
-        val tapIntent = Intent(context, MainActivity::class.java).apply {
+        val timeText = intent.getStringExtra("timeText") ?: "Now"
+
+        val fullScreenIntent = Intent(context, com.farmlens.anarai.AlarmScreenActivity::class.java).apply {
+            putExtra("chemicalName", chemical)
+            putExtra("notes", notes)
+            putExtra("timeText", timeText)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(
+        val fullScreenPendingIntent = PendingIntent.getActivity(
             context,
-            0,
-            tapIntent,
-            PendingIntent.FLAG_IMMUTABLE
+            System.currentTimeMillis().toInt(),
+            fullScreenIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification = NotificationCompat.Builder(context, "treatment_reminders")
-            .setSmallIcon(R.mipmap.ic_launcher_round) // Using the app icon
+            .setSmallIcon(R.mipmap.ic_launcher_round)
             .setContentTitle("Anar X Reminder: $chemical")
-            .setContentText(if (notes.isNotEmpty()) "Notes: $notes" else "It is time for your scheduled treatment.")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentText("It is time for your scheduled treatment.")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
             .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
             .build()
 
-        // Use a unique ID for each notification based on current time
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
     }
 }
