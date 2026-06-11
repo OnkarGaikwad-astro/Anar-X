@@ -30,8 +30,6 @@ import com.farmlens.anarai.data.AppDatabase
 import com.farmlens.anarai.data.ScanHistoryEntity
 import com.farmlens.anarai.ml.MLService
 import com.farmlens.anarai.ml.PredictionResult
-import com.farmlens.anarai.ml.OnDeviceLLMService
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -40,10 +38,8 @@ import java.util.Locale
 fun ResultScreen(imageUri: Uri, isHistory: Boolean = false, mlService: MLService, onBack: () -> Unit) {
     val context = LocalContext.current
     var prediction by remember { mutableStateOf<PredictionResult?>(null) }
-    var llmRecommendation by remember { mutableStateOf<String>("Loading AI recommendation...") }
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
     val coroutineScope = rememberCoroutineScope()
-    val onDeviceLLM = remember { OnDeviceLLMService(context) }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -97,27 +93,6 @@ fun ResultScreen(imageUri: Uri, isHistory: Boolean = false, mlService: MLService
                         )
                     }
                 }
-
-                // Fetch AI Recommendation if not healthy
-                if (res.disease != "Healthy") {
-                    coroutineScope.launch {
-                        try {
-                            val prompt = "You are an expert agricultural AI. The user has uploaded a pomegranate photo. " +
-                                    "The disease detected is ${res.disease} with a severity of ${getMarathiSeverity(res.severity)}. " +
-                                    "Provide a very brief, practical treatment recommendation in bullet points."
-                            
-                            // Use on-device LLM (Gemma) instead of Ollama
-                            onDeviceLLM.initialize() // Will fast-return if already initialized
-                            var accumulatedResponse = ""
-                            onDeviceLLM.generateResponse(prompt, isChat = false).collectLatest { responseChunk ->
-                                accumulatedResponse = responseChunk
-                                llmRecommendation = accumulatedResponse
-                            }
-                        } catch (e: Exception) {
-                            llmRecommendation = "Failed to run on-device LLM: ${e.message}\n\nFallback: " + getRecommendation(res.disease)
-                        }
-                    }
-                }
                 }
             }
         }
@@ -151,20 +126,20 @@ fun ResultScreen(imageUri: Uri, isHistory: Boolean = false, mlService: MLService
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Image Preview
-            AsyncImage(
-                model = imageUri,
-                contentDescription = "Captured Pomegranate",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp)
-                    .clip(RoundedCornerShape(16.dp))
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-
             prediction?.let { res ->
+                // Image Preview
+                AsyncImage(
+                    model = imageUri,
+                    contentDescription = "Captured Pomegranate",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+
                 val isHealthy = res.disease == "Healthy"
                 
                 // Color coding based on severity
@@ -243,7 +218,7 @@ fun ResultScreen(imageUri: Uri, isHistory: Boolean = false, mlService: MLService
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Text(
-                            text = llmRecommendation,
+                            text = getRecommendation(res.disease),
                             modifier = Modifier.padding(16.dp),
                             fontSize = 16.sp,
                             color = Color.DarkGray,
@@ -272,7 +247,27 @@ fun ResultScreen(imageUri: Uri, isHistory: Boolean = false, mlService: MLService
                     }
                 }
             } ?: run {
-                CircularProgressIndicator(color = Color(0xFF2E7D32))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(64.dp),
+                            color = Color(0xFF2E7D32),
+                            strokeWidth = 6.dp
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = "Analyzing crop health...",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.DarkGray
+                        )
+                    }
+                }
             }
         }
     }

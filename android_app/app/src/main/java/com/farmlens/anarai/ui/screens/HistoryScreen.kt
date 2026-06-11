@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Close
@@ -33,7 +34,7 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryScreen(onItemClick: (String) -> Unit) {
+fun HistoryScreen(onItemClick: (String) -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
     val db = remember { AppDatabase.getDatabase(context) }
     val historyList by db.scanHistoryDao().getAllHistory().collectAsState(initial = emptyList())
@@ -68,10 +69,15 @@ fun HistoryScreen(onItemClick: (String) -> Unit) {
                 )
             } else {
                 TopAppBar(
-                    title = { Text("Scan History", fontWeight = FontWeight.Bold) },
+                    title = { Text("Scan History", color = Color.White, fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        }
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = Color.White
+                        navigationIconContentColor = Color.White
                     )
                 )
             }

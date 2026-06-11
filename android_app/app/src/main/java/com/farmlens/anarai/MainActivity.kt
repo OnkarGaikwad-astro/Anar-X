@@ -19,6 +19,9 @@ import com.farmlens.anarai.ml.MLService
 import com.farmlens.anarai.ui.screens.MainScreen
 import com.farmlens.anarai.ui.screens.ResultScreen
 import com.farmlens.anarai.ui.screens.SplashScreen
+import com.farmlens.anarai.ui.screens.YieldResultScreen
+import com.farmlens.anarai.ui.screens.MarketPricesScreen
+import com.farmlens.anarai.ui.screens.HistoryScreen
 import com.farmlens.anarai.ui.theme.FarmLensTheme
 
 enum class Screen {
@@ -80,6 +83,33 @@ class MainActivity : ComponentActivity() {
                                     imageUri = uri,
                                     isHistory = fromHistory,
                                     mlService = mlService,
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
+                        }
+                        composable("market_prices") {
+                            MarketPricesScreen(onBack = { navController.popBackStack() })
+                        }
+                        composable("history_view") {
+                            HistoryScreen(
+                                onItemClick = { uri ->
+                                    navController.navigate("result/${Uri.encode(uri)}?fromHistory=true")
+                                },
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable(
+                            route = "yield_result/{imageUri}",
+                            enterTransition = { androidx.compose.animation.EnterTransition.None },
+                            exitTransition = { androidx.compose.animation.ExitTransition.None },
+                            popEnterTransition = { androidx.compose.animation.EnterTransition.None },
+                            popExitTransition = { androidx.compose.animation.ExitTransition.None }
+                        ) { backStackEntry ->
+                            val uriString = backStackEntry.arguments?.getString("imageUri")
+                            val uri = uriString?.let { Uri.parse(it) }
+                            if (uri != null) {
+                                YieldResultScreen(
+                                    imageUri = uri,
                                     onBack = { navController.popBackStack() }
                                 )
                             }

@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -28,25 +28,23 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.farmlens.anarai.ml.MLService
 
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val title: String) {
-    object Home : BottomNavItem("home", Icons.Default.CameraAlt, "Scan")
+    object Home : BottomNavItem("home", Icons.Default.Dashboard, "Home")
+    object Expenses : BottomNavItem("expenses", Icons.Default.AttachMoney, "Expenses")
+    object Forum : BottomNavItem("forum", Icons.Default.Forum, "Forum")
     object Calendar : BottomNavItem("calendar", Icons.Default.CalendarMonth, "Schedule")
-    object History : BottomNavItem("history", Icons.Default.History, "History")
-    object AskAurex : BottomNavItem("ask_aurex", Icons.Default.AutoAwesome, "Ask Aurex")
 }
 
 @Composable
 fun MainScreen(mlService: MLService, globalNavController: NavController) {
-    val askAurexViewModel: AskAurexViewModel = viewModel()
     val navController = rememberNavController()
     val items = listOf(
         BottomNavItem.Home,
-        BottomNavItem.Calendar,
-        BottomNavItem.History,
-        BottomNavItem.AskAurex
+        BottomNavItem.Expenses,
+        BottomNavItem.Forum,
+        BottomNavItem.Calendar
     )
 
     Scaffold(
@@ -97,21 +95,44 @@ fun MainScreen(mlService: MLService, globalNavController: NavController) {
                 HomeScreen(
                     onImageSelected = { uri ->
                         globalNavController.navigate("result/${Uri.encode(uri.toString())}")
+                    },
+                    onYieldSelected = { uri ->
+                        globalNavController.navigate("yield_result/${Uri.encode(uri.toString())}")
+                    },
+                    onMarketPricesClick = {
+                        globalNavController.navigate("market_prices")
+                    },
+                    onHistoryClick = {
+                        globalNavController.navigate("history_view")
                     }
                 )
+            }
+            composable(BottomNavItem.Expenses.route) {
+                ExpenseScreen(onBack = { 
+                    navController.navigate(BottomNavItem.Home.route) { 
+                        popUpTo(navController.graph.startDestinationRoute!!) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    } 
+                })
+            }
+            composable(BottomNavItem.Forum.route) {
+                ForumScreen(onBack = { 
+                    navController.navigate(BottomNavItem.Home.route) { 
+                        popUpTo(navController.graph.startDestinationRoute!!) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    } 
+                })
             }
             composable(BottomNavItem.Calendar.route) {
-                CalendarScreen()
-            }
-            composable(BottomNavItem.History.route) {
-                HistoryScreen(
-                    onItemClick = { uri ->
-                        globalNavController.navigate("result/${Uri.encode(uri)}?fromHistory=true")
-                    }
-                )
-            }
-            composable(BottomNavItem.AskAurex.route) {
-                AskAurexScreen(viewModel = askAurexViewModel)
+                CalendarScreen(onBack = { 
+                    navController.navigate(BottomNavItem.Home.route) { 
+                        popUpTo(navController.graph.startDestinationRoute!!) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    } 
+                })
             }
         }
     }
