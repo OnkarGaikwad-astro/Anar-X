@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -141,6 +142,28 @@ fun HomeScreen(
     }
 
     var showSourceDialog by remember { mutableStateOf(false) }
+    var showProfileDialog by remember { mutableStateOf(false) }
+
+    if (showProfileDialog) {
+        AlertDialog(
+            onDismissRequest = { showProfileDialog = false },
+            title = { Text("User Profile", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text("Name: Onkar", fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Location: Maharashtra, India", fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Farm Size: 5 Acres", fontSize = 16.sp)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showProfileDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
 
     if (showSourceDialog) {
         AlertDialog(
@@ -173,6 +196,11 @@ fun HomeScreen(
                 navigationIcon = {
                     IconButton(onClick = { (context as? android.app.Activity)?.finish() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Exit App")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showProfileDialog = true }) {
+                        Icon(Icons.Default.AccountCircle, contentDescription = "User Profile", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

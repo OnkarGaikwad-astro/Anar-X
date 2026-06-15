@@ -14,36 +14,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.farmlens.anarai.data.AppDatabase
-import com.farmlens.anarai.data.ForumPostEntity
-import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.farmlens.anarai.data.remote.ForumPost
+import com.farmlens.anarai.ui.viewmodels.ForumUiState
+import com.farmlens.anarai.ui.viewmodels.ForumViewModel
+import com.farmlens.anarai.util.TimeUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ForumScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
-    val db = remember { AppDatabase.getDatabase(context) }
-    val coroutineScope = rememberCoroutineScope()
-    val posts by db.forumDao().getAllPosts().collectAsState(initial = emptyList())
-
+fun ForumScreen(
+    onBack: () -> Unit,
+    onPostClick: (String) -> Unit,
+    viewModel: ForumViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    
     var showAddDialog by remember { mutableStateOf(false) }
     var newPostContent by remember { mutableStateOf("") }
-
-    // Add initial mock posts if empty
-    LaunchedEffect(posts) {
-        if (posts.isEmpty()) {
-            coroutineScope.launch {
-                db.forumDao().insert(ForumPostEntity(authorName = "Ramesh Patil", content = "What is the best fertilizer for flowering stage?", timestamp = System.currentTimeMillis() - 86400000, replies = 3))
-                db.forumDao().insert(ForumPostEntity(authorName = "Sunil Jadhav", content = "My leaves are turning yellow, what could it be?", timestamp = System.currentTimeMillis() - 3600000, replies = 1))
-            }
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -70,16 +62,47 @@ fun ForumScreen(onBack: () -> Unit) {
             }
         }
     ) { padding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5)),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .background(Color(0xFFF5F5F5))
         ) {
-            items(posts) { post ->
-                ForumPostCard(post)
+            when (val state = uiState) {
+                is ForumUiState.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                is ForumUiState.Error -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { viewModel.fetchPosts() }) {
+                            Text("Retry")
+                        }
+                    }
+                }
+                is ForumUiState.Success -> {
+                    if (state.posts.isEmpty()) {
+                        Text(
+                            "No posts yet. Be the first to ask!",
+                            modifier = Modifier.align(Alignment.Center),
+                            color = Color.Gray
+                        )
+                    } else {
+                        LazyColumn(
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(state.posts) { post ->
+                                ForumPostCard(post = post, onClick = { onPostClick(post.id) })
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -99,18 +122,9 @@ fun ForumScreen(onBack: () -> Unit) {
                 confirmButton = {
                     TextButton(onClick = {
                         if (newPostContent.isNotBlank()) {
-                            coroutineScope.launch {
-                                db.forumDao().insert(
-                                    ForumPostEntity(
-                                        authorName = "You",
-                                        content = newPostContent,
-                                        timestamp = System.currentTimeMillis(),
-                                        replies = 0
-                                    )
-                                )
-                                showAddDialog = false
-                                newPostContent = ""
-                            }
+                            viewModel.addPost(newPostContent)
+                            showAddDialog = false
+                            newPostContent = ""
                         }
                     }) {
                         Text("Post")
@@ -126,13 +140,14 @@ fun ForumScreen(onBack: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ForumPostCard(post: ForumPostEntity) {
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
-    val dateString = dateFormat.format(Date(post.timestamp))
+fun ForumPostCard(post: ForumPost, onClick: () -> Unit) {
+    val displayDate = TimeUtils.formatSupabaseTime(post.createdAt)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp)
@@ -144,7 +159,7 @@ fun ForumPostCard(post: ForumPostEntity) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(post.authorName, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF1B5E20))
-                Text(dateString, fontSize = 12.sp, color = Color.Gray)
+                Text(displayDate, fontSize = 12.sp, color = Color.Gray)
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(post.content, fontSize = 15.sp, color = Color.DarkGray, lineHeight = 22.sp)
@@ -157,3 +172,4 @@ fun ForumPostCard(post: ForumPostEntity) {
         }
     }
 }
+

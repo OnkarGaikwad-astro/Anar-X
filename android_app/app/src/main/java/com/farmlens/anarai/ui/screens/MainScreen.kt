@@ -117,13 +117,25 @@ fun MainScreen(mlService: MLService, globalNavController: NavController) {
                 })
             }
             composable(BottomNavItem.Forum.route) {
-                ForumScreen(onBack = { 
-                    navController.navigate(BottomNavItem.Home.route) { 
-                        popUpTo(navController.graph.startDestinationRoute!!) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    } 
-                })
+                ForumScreen(
+                    onBack = { 
+                        navController.navigate(BottomNavItem.Home.route) { 
+                            popUpTo(navController.graph.startDestinationRoute!!) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        } 
+                    },
+                    onPostClick = { postId ->
+                        navController.navigate("forum_detail/$postId")
+                    }
+                )
+            }
+            composable("forum_detail/{postId}") { backStackEntry ->
+                val postId = backStackEntry.arguments?.getString("postId") ?: ""
+                PostDetailScreen(
+                    postId = postId,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(BottomNavItem.Calendar.route) {
                 CalendarScreen(onBack = { 
