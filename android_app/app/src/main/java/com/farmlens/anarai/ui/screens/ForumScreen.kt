@@ -34,6 +34,10 @@ fun ForumScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
+    LaunchedEffect(Unit) {
+        viewModel.fetchPosts()
+    }
+    
     var showAddDialog by remember { mutableStateOf(false) }
     var newPostContent by remember { mutableStateOf("") }
 

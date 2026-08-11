@@ -4,6 +4,9 @@ import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
+@kotlinx.serialization.Serializable
+data class ReplyUpdate(val replies: Int)
+
 class ForumRepository {
     private val supabase = SupabaseClient.client
 
@@ -41,10 +44,6 @@ class ForumRepository {
             val post = supabase.postgrest["posts"]
                 .select { filter { eq("id", reply.postId) } }
                 .decodeSingle<ForumPost>()
-            
-            // Supabase postgrest-kt update syntax usually requires a serializable class or map
-            @kotlinx.serialization.Serializable
-            data class ReplyUpdate(val replies: Int)
             
             supabase.postgrest["posts"]
                 .update(ReplyUpdate(post.replies + 1)) {
