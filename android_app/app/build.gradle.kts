@@ -32,8 +32,27 @@ android {
         val supabaseUrl = properties.getProperty("SUPABASE_URL", "")
         val supabaseKey = properties.getProperty("SUPABASE_KEY", "")
 
+        val keystorePath = properties.getProperty("KEYSTORE_PATH", "")
+        val keystorePassword = properties.getProperty("KEYSTORE_PASSWORD", "")
+        val keyAlias = properties.getProperty("KEY_ALIAS", "")
+        val keyPassword = properties.getProperty("KEY_PASSWORD", "")
+
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
+    }
+
+    signingConfigs {
+        create("release") {
+            val properties = Properties()
+            val localPropertiesFile = rootProject.file("local.properties")
+            if (localPropertiesFile.exists()) {
+                properties.load(FileInputStream(localPropertiesFile))
+            }
+            storeFile = rootProject.file(properties.getProperty("KEYSTORE_PATH", ""))
+            storePassword = properties.getProperty("KEYSTORE_PASSWORD", "")
+            keyAlias = properties.getProperty("KEY_ALIAS", "")
+            keyPassword = properties.getProperty("KEY_PASSWORD", "")
+        }
     }
 
     buildTypes {
